@@ -190,7 +190,7 @@ ffmpeg -version
 ```
 https://www.youtube.com/watch?v=dQw4w9WgXcQ
 https://www.youtube.com/watch?v=9bZkp7q19f0
-https://www.youtube.com/watch?v=jNQXAC9IVRw
+https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=ygUMa2VybWl0IGRhbmNloAcB0gcJCXwKAYcqIYzv
 ```
 
 ### 2. Запуск
@@ -217,7 +217,6 @@ python yt-download2.py
 
 | Файл | Описание |
 |------|----------|
-| `links.txt` | Входной список YouTube URL для загрузки (создается вручную) |
 | `download.log` | Основной лог с временными метками всех событий и ошибок |
 | `download.log.1` - `.5` | Резервные копии логов (создаются при ротации) |
 | `download_archive.txt` | Служебный файл yt-dlp с ID успешно скачанных видео |
