@@ -1,21 +1,72 @@
 # yt-download
 
+**Version:** 2.0 | **Last Updated:** January 2026
+
 [![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README_RU.md)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-Free-green.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey.svg)]()
+[![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red.svg)](https://github.com/yt-dlp/yt-dlp)
 
 *[Читать на русском](README_RU.md)*
 
 ---
 
-Python script for automated mass downloading of YouTube videos via [yt-dlp](https://github.com/yt-dlp/yt-dlp) with intelligent error handling, retry system, and detailed logging.
+**Automated YouTube video downloader with intelligent error handling, retry system, and detailed logging for mass downloads (hundreds/thousands of files).**
 
-Python-скрипт для автоматизированной массовой загрузки видео с YouTube через yt-dlp с интеллектуальной обработкой ошибок, системой повторных попыток и детальным логированием.
+**Автоматизированный загрузчик видео с YouTube с интеллектуальной обработкой ошибок, системой повторных попыток и детальным логированием для массовых загрузок (сотни/тысячи файлов).**
+
+## ✨ Features
+
+- 🧠 **Intelligent Error Handling** — 15+ error types classified into categories (skip, retry, pause, fatal)
+- 🔄 **Automatic Retry System** — Up to 3 attempts per video with progressive delays
+- 📊 **Detailed Logging** — Rotating logs with 10MB auto-rotation (keeps 5 backups)
+- ⚡ **Parallel Downloads** — 5 concurrent fragments for faster speeds
+- 🎯 **Resume Support** — Continue from where you left off via archive tracking
+- 🍪 **Cookie Support** — Access age-restricted content with browser cookies
+- 🎨 **Colored Output** — Real-time progress with color-coded status
+- ⏱️ **Adaptive Delays** — 15-45 second intervals to avoid rate limits
+- 📦 **MP4 Optimization** — Automatic metadata and thumbnail embedding
+- 🔁 **Rate Limit Detection** — Automatic 1-hour pause on YouTube throttling
+
+## 📋 Table of Contents
+
+- [Purpose](#purpose)
+- [Quick Start](#-quick-start)
+- [Key Features](#key-features)
+- [System Requirements](#system-requirements)
+- [Installing Dependencies](#installing-dependencies)
+- [Usage](#-usage)
+- [File Structure](#-file-structure)
+- [Script Configuration](#️-script-configuration)
+- [Operating Logic](#-operating-logic)
+- [Handled Errors](#️-handled-errors)
+- [Troubleshooting](#-troubleshooting)
+- [FAQ](#-faq)
+- [Additional Information](#-additional-information)
+- [License](#-license)
+- [Useful Links](#-useful-links)
 
 ## Purpose
 
 The script is designed for reliable downloading of large video collections (hundreds and thousands of files, including playlists) in a "set and forget" mode. Automatically handles typical issues: YouTube rate limits, network errors, unavailable videos, with the ability to resume from where it left off. It's simply a scripted wrapper around yt-dlp, written for personal convenience.
 
-Скрипт предназначен для надежной загрузки больших коллекций видео (сотни и тысячи файлов, включая плейлисты) в режиме «запустил и забыл». Автоматически обрабатывает типичные проблемы: rate limit YouTube, сетевые ошибки, недоступные видео, с возможностью возобновления с места остановки. Является просто скриптовой надстройкой над yt-dlp, написанной для собственного удобства.
+## ⚡ Quick Start
+
+```powershell
+# 1. Install dependencies
+pip install -U yt-dlp colorama
+winget install ffmpeg
+
+# 2. Create links.txt with YouTube URLs
+echo https://www.youtube.com/watch?v=dQw4w9WgXcQ > links.txt
+
+# 3. Run the script
+python yt-download2.py
+```
+
+That's it! The script will handle everything automatically with intelligent error recovery.
 
 ## Key Features
 
@@ -132,7 +183,7 @@ ffmpeg -version
 
 After installation, the following commands will be available: `ffmpeg`, `ffplay`, `ffprobe`.
 
-## Usage
+## 🚀 Usage
 
 ### 1. Preparation
 
@@ -162,7 +213,7 @@ The script will automatically process all links with error handling. Progress is
 
 If necessary, interrupt the script with **Ctrl+C** — progress will be saved in `download_archive.txt`, and you can continue later from the same place.
 
-## File Structure
+## 📁 File Structure
 
 After running, the script will create the following files:
 
@@ -254,16 +305,16 @@ Full list: [yt-dlp Output Template](https://github.com/yt-dlp/yt-dlp#output-temp
 
 Available browsers: `firefox`, `chrome`, `chromium`, `edge`, `opera`, `brave`, `safari`
 
-## Operating Logic
+## 🔍 Operating Logic
 
-1. Checks for presence of yt-dlp and ffmpeg in the system
-2. Reads the `links.txt` file with URL list (ignores commented lines with `#`)
-3. For each video, launches yt-dlp with optimized parameters
-4. Monitors output in real-time, recognizes errors
-5. On error, classifies it and decides: retry, skip, or pause
-6. Logs all events with timestamps in `download.log` (with auto-rotation)
-7. Saves IDs of successfully downloaded videos in `download_archive.txt`
-8. Upon completion, outputs detailed statistics and list of failed downloads
+1. ✅ Checks for presence of yt-dlp and ffmpeg in the system
+2. 📄 Reads the `links.txt` file with URL list (ignores commented lines with `#`)
+3. 🎬 For each video, launches yt-dlp with optimized parameters
+4. 👁️ Monitors output in real-time, recognizes errors
+5. 🔄 On error, classifies it and decides: retry, skip, or pause
+6. 📝 Logs all events with timestamps in `download.log` (with auto-rotation)
+7. 💾 Saves IDs of successfully downloaded videos in `download_archive.txt`
+8. 📊 Upon completion, outputs detailed statistics and list of failed downloads
 
 ### ffmpeg's Role in the Download Process
 
@@ -278,15 +329,15 @@ YouTube delivers high-quality video (720p and higher) as **separate streams**: a
 4. **Metadata** — embeds title, author, description, and thumbnail directly into the file
 
 **Result:** MP4 with H.264/AAC is a universal format with maximum compatibility:
-- **Media servers**: Plex, Jellyfin, Emby, Kodi
-- **Mobile devices**: iPhone, iPad, Android
-- **Smart TV**: Samsung, LG, Sony, Android TV
-- **Game consoles**: PlayStation, Xbox
-- **Video players**: VLC, MPC-HC, PotPlayer, Windows Media Player
+- 📺 **Media servers**: Plex, Jellyfin, Emby, Kodi
+- 📱 **Mobile devices**: iPhone, iPad, Android
+- 🖥️ **Smart TV**: Samsung, LG, Sony, Android TV
+- 🎮 **Game consoles**: PlayStation, Xbox
+- 🎬 **Video players**: VLC, MPC-HC, PotPlayer, Windows Media Player
 
 **Without ffmpeg:** yt-dlp can only download low-quality video (360p-480p) where audio and video are already merged, or separate streams in WebM/VP9 formats that don't play on many devices.
 
-## Handled Errors
+## ⚠️ Handled Errors
 
 The script automatically handles the following error types:
 
@@ -314,7 +365,104 @@ The script automatically handles the following error types:
 - No folder access rights
 - ffmpeg not found
 
-## Additional Information
+## 🔧 Troubleshooting
+
+### "yt-dlp not found" Error
+
+**Cause:** yt-dlp is not installed or not in PATH
+
+**Solution:**
+```powershell
+# Verify installation
+where yt-dlp
+
+# Reinstall if needed
+pip install -U yt-dlp
+```
+
+### "ffmpeg not found" Error
+
+**Cause:** ffmpeg is not installed or not in PATH
+
+**Solution:**
+```powershell
+# Install via winget
+winget install ffmpeg
+
+# Restart PowerShell to reload PATH
+# Verify installation
+ffmpeg -version
+```
+
+### Rate Limit Errors (HTTP 429)
+
+**Cause:** Too many requests to YouTube
+
+**Solution:**
+- Script automatically pauses for 1 hour
+- Increase delays in configuration: `--sleep-interval 30` and `--max-sleep-interval 90`
+- Use cookies from an authorized browser account
+
+### "HTTP Error 403: Forbidden"
+
+**Cause:** Access denied (often for age-restricted videos)
+
+**Solution:**
+- Ensure cookies are properly exported from Firefox
+- Log into YouTube in your browser before running the script
+- Check that `--cookies-from-browser firefox` is in configuration
+
+### Script Hangs on a Video
+
+**Cause:** Network issues or YouTube throttling
+
+**Solution:**
+- Script has built-in 10-minute timeout per video
+- If it hangs repeatedly, check your internet connection
+- Try reducing `--concurrent-fragments` from 5 to 3
+
+### "No video formats available"
+
+**Cause:** Video is deleted, private, or geo-blocked
+
+**Solution:**
+- Script automatically skips these videos
+- Check `failed_links.txt` for list of failed URLs
+- For geo-blocked videos, consider using a VPN
+
+## ❓ FAQ
+
+**Q: Can I download age-restricted videos?**  
+A: Yes, use cookies from an authorized browser account. The script is configured to use Firefox cookies by default via `--cookies-from-browser firefox`.
+
+**Q: How do I resume interrupted downloads?**  
+A: Just re-run the script. It automatically skips downloaded videos via `download_archive.txt`. Previously downloaded videos are tracked by their YouTube ID.
+
+**Q: What video quality does the script download?**  
+A: Automatically selects the best available quality (typically 1080p or higher if available). The format selection prioritizes H.264/AAC for maximum compatibility.
+
+**Q: How much disk space do I need?**  
+A: Full HD (1080p) videos typically range from 500 MB to 2 GB per video. Ensure you have sufficient free space for your download list.
+
+**Q: Can I download entire playlists?**  
+A: Yes, just paste the playlist URL in `links.txt`. yt-dlp will automatically expand it to individual video URLs.
+
+**Q: Why does the script pause for an hour?**  
+A: YouTube has imposed a rate limit. The script automatically detects this and waits 1 hour before resuming to avoid account blocking.
+
+**Q: Can I change the output format?**  
+A: Yes, modify the `--output` template in the script. See [yt-dlp Output Template](https://github.com/yt-dlp/yt-dlp#output-template) for available variables.
+
+**Q: What happens if my computer crashes during download?**  
+A: All successfully downloaded videos are recorded in `download_archive.txt`. Simply restart the script and it will continue from where it left off.
+
+**Q: Can I run multiple instances simultaneously?**  
+A: Not recommended, as both instances would write to the same log and archive files, causing conflicts. Use separate directories for parallel downloads.
+
+**Q: How do I update yt-dlp?**  
+A: Run `pip install -U yt-dlp` regularly. YouTube frequently changes its API, so keeping yt-dlp updated is important for reliability.
+
+## 📌 Additional Information
 
 - **Account security**: Use moderate delays between videos to avoid YouTube account blocking
 - **Disk space**: Ensure sufficient free space (Full HD video takes ~500 MB - 2 GB)
