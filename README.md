@@ -192,7 +192,7 @@ Create a file `links.txt` in the script folder, add one YouTube URL per line:
 ```
 https://www.youtube.com/watch?v=dQw4w9WgXcQ
 https://www.youtube.com/watch?v=9bZkp7q19f0
-https://www.youtube.com/watch?v=jNQXAC9IVRw
+https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=ygUMa2VybWl0IGRhbmNloAcB0gcJCXwKAYcqIYzv
 ```
 
 ### 2. Launch
@@ -219,7 +219,6 @@ After running, the script will create the following files:
 
 | File | Description |
 |------|----------|
-| `links.txt` | Input list of YouTube URLs to download (created manually) |
 | `download.log` | Main log with timestamps of all events and errors |
 | `download.log.1` - `.5` | Backup log copies (created during rotation) |
 | `download_archive.txt` | yt-dlp service file with IDs of successfully downloaded videos |
