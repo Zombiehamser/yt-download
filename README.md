@@ -1,319 +1,327 @@
 # yt-download
 
-Python-скрипт для автоматизированной массовой загрузки видео с YouTube через [yt-dlp](https://github.com/yt-dlp/yt-dlp) с интеллектуальной обработкой ошибок, системой повторных попыток и детальным логированием.
+[![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
+[![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README_RU.md)
 
-## Назначение
+*[Читать на русском](README_RU.md)*
 
-Скрипт предназначен для надежной загрузки больших коллекций видео (сотни и тысячи файлов, включая плейлисты) в режиме «запустил и забыл». Автоматически обрабатывает типичные проблемы: rate limit YouTube, сетевые ошибки, недоступные видео, с возможностью возобновления с места остановки. Является просто скриптовой надстройкой над yt-dlp, написанной для собственного удобства. 
+---
 
-## Основные возможности
+Python script for automated mass downloading of YouTube videos via [yt-dlp](https://github.com/yt-dlp/yt-dlp) with intelligent error handling, retry system, and detailed logging.
 
-### Интеллектуальная обработка ошибок
-- Классификация **15+ типов ошибок** на категории: skip (пропустить), retry (повторить), pause (пауза), fatal (критические)
-- Автоматическое определение **rate limit YouTube** с паузой 1 час
-- Обработка HTTP 403/429/400/404/410, bot detection, geo-блокировки, copyright, приватных видео
-- Адаптивные паузы в зависимости от типа ошибки (от 30 секунд до 1 часа)
+## Purpose
 
-### Система повторных попыток
-- До **3 попыток** на каждое видео с прогрессивными задержками
-- Автоматический пропуск необратимых ошибок (удаленные/платные/приватные видео)
-- Встроенная защита от зависания (таймаут **10 минут** на видео)
+The script is designed for reliable downloading of large video collections (hundreds and thousands of files, including playlists) in a "set and forget" mode. Automatically handles typical issues: YouTube rate limits, network errors, unavailable videos, with the ability to resume from where it left off. It's simply a scripted wrapper around yt-dlp, written for personal convenience.
 
-### Оптимизация загрузки
-- Использование cookies из Firefox (!) для доступа к видео с возрастными ограничениями
-- **Параллельная загрузка фрагментов** (5 потоков) для ускорения
-- Адаптивные задержки **15-45 секунд** между видео для избежания блокировок
-- Автоматическое встраивание метаданных и миниатюр в MP4
+## Key Features
 
-### Логирование и мониторинг
-- Единый лог-файл `download.log` с временными метками всех событий
-- **Автоматическая ротация логов** при достижении 10 МБ (хранится 5 резервных копий)
-- Цветной консольный вывод с прогресс-баром загрузки (через colorama)
-- Детальная статистика: успешно/пропущено/ошибки, общее и среднее время
+### Intelligent Error Handling
+- Classification of **15+ error types** into categories: skip, retry, pause, fatal
+- Automatic detection of **YouTube rate limit** with 1-hour pause
+- Handling of HTTP 403/429/400/404/410, bot detection, geo-blocks, copyright, private videos
+- Adaptive pauses depending on error type (from 30 seconds to 1 hour)
 
-### Архивирование и возобновление
-- Использует встроенный механизм yt-dlp для отслеживания скачанных видео по ID
-- Автоматический **пропуск уже загруженных** файлов при перезапуске
-- Сохранение списка неудавшихся загрузок в `failed_links.txt` для повторной попытки
+### Retry System
+- Up to **3 attempts** per video with progressive delays
+- Automatic skipping of irreversible errors (deleted/paid/private videos)
+- Built-in hang protection (timeout **10 minutes** per video)
 
-## Системные требования
+### Download Optimization
+- Using cookies from Firefox (!) to access age-restricted videos
+- **Parallel fragment downloading** (5 threads) for speed
+- Adaptive delays of **15-45 seconds** between videos to avoid blocks
+- Automatic embedding of metadata and thumbnails into MP4
 
-### Обязательные компоненты
+### Logging and Monitoring
+- Single log file `download.log` with timestamps of all events
+- **Automatic log rotation** at 10 MB (keeps 5 backup copies)
+- Colored console output with download progress bar (via colorama)
+- Detailed statistics: successful/skipped/errors, total and average time
 
-- **Windows**: 10/11 или Windows Server 2016+
-- **Python**: 3.8 или выше → [Скачать Python](https://www.python.org/downloads/)
-- **PowerShell**: 5.1 или выше (встроен в Windows)
-- **yt-dlp**: последняя версия → [GitHub yt-dlp](https://github.com/yt-dlp/yt-dlp)
-- **ffmpeg**: для объединения видео/аудио форматов → [Скачать ffmpeg](https://ffmpeg.org/download.html)
+### Archiving and Resuming
+- Uses yt-dlp's built-in mechanism to track downloaded videos by ID
+- Automatic **skipping of already downloaded** files on restart
+- Saving list of failed downloads to `failed_links.txt` for retry
 
-### Установка зависимостей
+## System Requirements
 
-#### Установка yt-dlp и Python-библиотек
+### Required Components
+
+- **Windows**: 10/11 or Windows Server 2016+
+- **Python**: 3.8 or higher → [Download Python](https://www.python.org/downloads/)
+- **PowerShell**: 5.1 or higher (built into Windows)
+- **yt-dlp**: latest version → [GitHub yt-dlp](https://github.com/yt-dlp/yt-dlp)
+- **ffmpeg**: for merging video/audio formats → [Download ffmpeg](https://ffmpeg.org/download.html)
+
+### Installing Dependencies
+
+#### Installing yt-dlp and Python Libraries
 
 ```powershell
-# Установка yt-dlp
+# Install yt-dlp
 pip install -U yt-dlp
 
-# Установка colorama для цветного вывода (опционально)
+# Install colorama for colored output (optional)
 pip install colorama
 ```
 
-#### Установка ffmpeg
+#### Installing ffmpeg
 
-Существует несколько способов установки ffmpeg в PowerShell на Windows.
+There are several ways to install ffmpeg in PowerShell on Windows.
 
-##### Способ 1: Через Winget (рекомендуется)
+##### Method 1: Via Winget (recommended)
 
-Winget встроен в Windows 10/11, поэтому это самый простой способ:
+Winget is built into Windows 10/11, so this is the easiest method:
 
 ```powershell
 winget install ffmpeg
 ```
 
-##### Способ 2: Через Chocolatey
+##### Method 2: Via Chocolatey
 
-Если у вас установлен Chocolatey, выполните в PowerShell с правами администратора:
+If you have Chocolatey installed, run in PowerShell with administrator rights:
 
 ```powershell
 choco install ffmpeg
 ```
 
-##### Способ 3: Через Scoop
+##### Method 3: Via Scoop
 
-Scoop устанавливает программы в пользовательскую директорию без засорения системных папок:
+Scoop installs programs in a user directory without cluttering system folders:
 
 ```powershell
 scoop install ffmpeg
 ```
 
-##### Способ 4: Ручная установка
+##### Method 4: Manual Installation
 
-Если предпочитаете больший контроль над процессом установки:
+If you prefer more control over the installation process:
 
-1. Откройте PowerShell с правами администратора
+1. Open PowerShell with administrator rights
 
-2. Скачайте и установите ffmpeg:
+2. Download and install ffmpeg:
 
 ```powershell
-# Скачивание ffmpeg
+# Download ffmpeg
 Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "ffmpeg.zip"
 
-# Распаковка в C:\
+# Extract to C:\
 Expand-Archive -Path "ffmpeg.zip" -DestinationPath "C:\"
 
-# Переименование папки
+# Rename folder
 $ffmpegFolder = Get-ChildItem -Path "C:\" -Filter "ffmpeg-*" -Directory
 Rename-Item -Path $ffmpegFolder.FullName -NewName "ffmpeg"
 ```
 
-3. Добавьте ffmpeg в PATH:
+3. Add ffmpeg to PATH:
 
 ```powershell
 $envPath = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 [Environment]::SetEnvironmentVariable("PATH", $envPath + ";C:\ffmpeg\bin", "Machine")
 ```
 
-4. Проверьте установку, открыв новый терминал:
+4. Verify installation by opening a new terminal:
 
 ```powershell
 ffmpeg -version
 ```
 
-## 🚀 Использование
+After installation, the following commands will be available: `ffmpeg`, `ffplay`, `ffprobe`.
 
-### 1. Подготовка
+## Usage
 
-Создайте файл `links.txt` в папке со скриптом, добавьте по одному YouTube URL на строку:
+### 1. Preparation
+
+Create a file `links.txt` in the script folder, add one YouTube URL per line:
 
 ```
 https://www.youtube.com/watch?v=dQw4w9WgXcQ
 https://www.youtube.com/watch?v=9bZkp7q19f0
-https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=ygUMa2VybWl0IGRhbmNloAcB
+https://www.youtube.com/watch?v=jNQXAC9IVRw
 ```
-Обратите внимание на добавленные ссылки, если в составе ссылки есть "хвост" вида &pp=ygUMa2VybWl0IGRhbmNloAcB, это означает что добавлен плейлист. В случае добавления плейлиста в статусе public, то есть доступного для загрузки не только его владельцем, будут скачены все видео которые в него добавлены.
 
-### 2. Запуск
+### 2. Launch
 
 ```powershell
 python yt-download2.py
 ```
-или просто нажмите на файл yt-download2.py
 
-### 3. Мониторинг
+### 3. Monitoring
 
-Скрипт автоматически обработает все ссылки с обработкой ошибок. Прогресс отображается в консоли с цветной подсветкой:
-- 🟢 Зеленый — успешная загрузка
-- 🔵 Голубой — уже скачано ранее
-- 🟡 Желтый — предупреждения и повторные попытки
-- 🔴 Красный — ошибки
+The script will automatically process all links with error handling. Progress is displayed in the console with color highlighting:
+- 🟢 Green — successful download
+- 🔵 Blue — already downloaded previously
+- 🟡 Yellow — warnings and retries
+- 🔴 Red — errors
 
-### 4. Прерывание и возобновление
+### 4. Interruption and Resuming
 
-При необходимости прервите скрипт комбинацией **Ctrl+C** — прогресс сохранится в `download_archive.txt`, и можно продолжить позже с того же места.
+If necessary, interrupt the script with **Ctrl+C** — progress will be saved in `download_archive.txt`, and you can continue later from the same place.
 
-## Структура файлов
+## File Structure
 
-После запуска скрипт создаст следующие файлы:
+After running, the script will create the following files:
 
-| Файл | Описание |
+| File | Description |
 |------|----------|
-| `download.log` | Основной лог с временными метками всех событий и ошибок |
-| `download.log.1` - `.5` | Резервные копии логов (создаются при ротации) |
-| `download_archive.txt` | Служебный файл yt-dlp с ID успешно скачанных видео |
-| `failed_links.txt` | Список URL неудавшихся загрузок для повторной попытки |
-| `*.mp4` | Скачанные видеофайлы в формате `Название [ID].mp4` |
+| `links.txt` | Input list of YouTube URLs to download (created manually) |
+| `download.log` | Main log with timestamps of all events and errors |
+| `download.log.1` - `.5` | Backup log copies (created during rotation) |
+| `download_archive.txt` | yt-dlp service file with IDs of successfully downloaded videos |
+| `failed_links.txt` | List of URLs of failed downloads for retry |
+| `*.mp4` | Downloaded video files in format `Title [ID].mp4` |
 
-## ⚙️ Настройка скрипта
+## ⚙️ Script Configuration
 
-### Параметры авторотации логов
+### Log Auto-rotation Parameters
 
-В функции `setup_logger()` (строка ~30):
+In the `setup_logger()` function (line ~30):
 
 ```python
 logger = setup_logger(
     log_file, 
-    max_bytes=10*1024*1024,  # Максимальный размер лога в байтах (по умолчанию 10 МБ)
-    backup_count=5           # Количество резервных копий (по умолчанию 5)
+    max_bytes=10*1024*1024,  # Maximum log size in bytes (default 10 MB)
+    backup_count=5           # Number of backup copies (default 5)
 )
 ```
 
-**Настройка размера и количества логов:**
-- `max_bytes` — размер файла, при котором происходит ротация (например, `20*1024*1024` для 20 МБ)
-- `backup_count` — количество сохраняемых старых логов (например, `3` для 3 копий)
+**Configuring log size and count:**
+- `max_bytes` — file size at which rotation occurs (e.g., `20*1024*1024` for 20 MB)
+- `backup_count` — number of old logs to keep (e.g., `3` for 3 copies)
 
-### Параметры повторных попыток
+### Retry Parameters
 
-В функции `download_youtube_videos()` (строка ~280):
-
-```python
-max_attempts = 3  # Количество попыток на видео (по умолчанию 3)
-```
-
-### Параметры таймаутов
-
-В цикле загрузки (строка ~330):
+In the `download_youtube_videos()` function (line ~280):
 
 ```python
-timeout_seconds = 600  # Таймаут на одно видео в секундах (по умолчанию 600 = 10 минут)
+max_attempts = 3  # Number of attempts per video (default 3)
 ```
 
-### Параметры задержек yt-dlp
+### Timeout Parameters
 
-В массиве `cmd` (строка ~250):
+In the download loop (line ~330):
 
 ```python
-'--sleep-requests', '3',      # Задержка между API-запросами (секунды)
-'--sleep-interval', '15',     # Минимальная задержка между видео (секунды)
-'--max-sleep-interval', '45', # Максимальная задержка между видео (секунды)
-'--socket-timeout', '30',     # Таймаут сокета (секунды)
+timeout_seconds = 600  # Timeout per video in seconds (default 600 = 10 minutes)
 ```
 
-**Рекомендации по настройке задержек:**
-- Для быстрой загрузки небольших плейлистов (<100 видео): `10-20` секунд
-- Для массовой загрузки (>1000 видео): `15-45` секунд (текущие значения)
-- При частых rate limit: увеличьте до `30-90` секунд
+### yt-dlp Delay Parameters
 
-### Параметры оптимизации загрузки
+In the `cmd` array (line ~250):
 
 ```python
-'--concurrent-fragments', '5',  # Количество параллельных потоков (по умолчанию 5)
-'--buffer-size', '16K',         # Размер буфера (16K оптимален для большинства случаев)
+'--sleep-requests', '3',      # Delay between API requests (seconds)
+'--sleep-interval', '15',     # Minimum delay between videos (seconds)
+'--max-sleep-interval', '45', # Maximum delay between videos (seconds)
+'--socket-timeout', '30',     # Socket timeout (seconds)
 ```
 
-### Формат имен файлов
+**Delay configuration recommendations:**
+- For fast downloading of small playlists (<100 videos): `10-20` seconds
+- For mass downloading (>1000 videos): `15-45` seconds (current values)
+- With frequent rate limits: increase to `30-90` seconds
+
+### Download Optimization Parameters
 
 ```python
-'--output', '%(title).200s [%(id)s].%(ext)s',  # Шаблон имени файла
+'--concurrent-fragments', '5',  # Number of parallel threads (default 5)
+'--buffer-size', '16K',         # Buffer size (16K optimal for most cases)
 ```
 
-**Доступные переменные:**
-- `%(title)s` — название видео
-- `%(id)s` — ID видео
-- `%(uploader)s` — автор канала
-- `%(upload_date)s` — дата загрузки
-
-Полный список: [yt-dlp Output Template](https://github.com/yt-dlp/yt-dlp#output-template)
-
-### Браузер для экспорта cookies
+### Filename Format
 
 ```python
-'--cookies-from-browser', 'firefox',  # Браузер для cookies (firefox, chrome, edge, safari)
+'--output', '%(title).200s [%(id)s].%(ext)s',  # Filename template
 ```
 
-Доступные браузеры: `firefox`, `chrome`, `chromium`, `edge`, `opera`, `brave`, `safari`
+**Available variables:**
+- `%(title)s` — video title
+- `%(id)s` — video ID
+- `%(uploader)s` — channel author
+- `%(upload_date)s` — upload date
 
-## Логика работы
+Full list: [yt-dlp Output Template](https://github.com/yt-dlp/yt-dlp#output-template)
 
-1. Проверяет наличие yt-dlp и ffmpeg в системе
-2. Читает файл `links.txt` со списком URL (игнорирует закомментированные строки с `#`)
-3. Для каждого видео запускает yt-dlp с оптимизированными параметрами
-4. Мониторит вывод в реальном времени, распознает ошибки
-5. При ошибке классифицирует её и принимает решение: повторить, пропустить или сделать паузу
-6. Логирует все события с временными метками в `download.log` (с авторотацией)
-7. Сохраняет ID успешно скачанных видео в `download_archive.txt`
-8. По завершении выводит детальную статистику и список неудавшихся загрузок
+### Browser for Cookie Export
 
-### Роль ffmpeg в процессе загрузки
+```python
+'--cookies-from-browser', 'firefox',  # Browser for cookies (firefox, chrome, edge, safari)
+```
 
-**Почему ffmpeg важен:**
+Available browsers: `firefox`, `chrome`, `chromium`, `edge`, `opera`, `brave`, `safari`
 
-YouTube раздает видео в высоком качестве (720p и выше) в виде **отдельных потоков**: видеодорожка без звука и аудиодорожка без видео. Это связано с технологией DASH (Dynamic Adaptive Streaming), которая позволяет адаптивно выбирать качество в зависимости от скорости соединения.
+## Operating Logic
 
-**Что делает ffmpeg:**
-1. **Скачивание** — yt-dlp загружает две отдельные дорожки (видео VP9/H.264 + аудио Opus/AAC)
-2. **Объединение** — ffmpeg мультиплексирует потоки в единый файл без перекодирования (быстро)
-3. **Конвертация** — преобразует в формат MP4 с кодеками H.264 (видео) + AAC (аудио)
-4. **Метаданные** — встраивает название, автора, описание и миниатюру непосредственно в файл
+1. Checks for presence of yt-dlp and ffmpeg in the system
+2. Reads the `links.txt` file with URL list (ignores commented lines with `#`)
+3. For each video, launches yt-dlp with optimized parameters
+4. Monitors output in real-time, recognizes errors
+5. On error, classifies it and decides: retry, skip, or pause
+6. Logs all events with timestamps in `download.log` (with auto-rotation)
+7. Saves IDs of successfully downloaded videos in `download_archive.txt`
+8. Upon completion, outputs detailed statistics and list of failed downloads
 
-**Результат:** MP4 с H.264/AAC — это универсальный формат с максимальной совместимостью:
-- **Медиасерверы**: Plex, Jellyfin, Emby, Kodi
-- **Мобильные устройства**: iPhone, iPad, Android
+### ffmpeg's Role in the Download Process
+
+**Why ffmpeg is critically important:**
+
+YouTube delivers high-quality video (720p and higher) as **separate streams**: a video track without audio and an audio track without video. This is due to DASH (Dynamic Adaptive Streaming) technology, which allows adaptive quality selection based on connection speed.
+
+**What ffmpeg does:**
+1. **Download** — yt-dlp downloads two separate tracks (video VP9/H.264 + audio Opus/AAC)
+2. **Merging** — ffmpeg multiplexes the streams into a single file without re-encoding (fast)
+3. **Conversion** — converts to MP4 format with H.264 (video) + AAC (audio) codecs
+4. **Metadata** — embeds title, author, description, and thumbnail directly into the file
+
+**Result:** MP4 with H.264/AAC is a universal format with maximum compatibility:
+- **Media servers**: Plex, Jellyfin, Emby, Kodi
+- **Mobile devices**: iPhone, iPad, Android
 - **Smart TV**: Samsung, LG, Sony, Android TV
-- **Игровые консоли**: PlayStation, Xbox
-- **Видеоплееры**: VLC, MPC-HC, PotPlayer, Windows Media Player
+- **Game consoles**: PlayStation, Xbox
+- **Video players**: VLC, MPC-HC, PotPlayer, Windows Media Player
 
-**Без ffmpeg:** yt-dlp сможет скачать только видео в низком качестве (360p-480p), где аудио и видео уже объединены, либо отдельные потоки в форматах WebM/VP9, которые не воспроизводятся на многих устройствах.
+**Without ffmpeg:** yt-dlp can only download low-quality video (360p-480p) where audio and video are already merged, or separate streams in WebM/VP9 formats that don't play on many devices.
 
-## Обрабатываемые ошибки
+## Handled Errors
 
-Скрипт автоматически обрабатывает следующие типы ошибок:
+The script automatically handles the following error types:
 
-### Временные (повторная попытка)
-- HTTP 403 (проблемы с доступом/cookies)
-- HTTP 400 (устаревшая версия yt-dlp)
-- Таймауты соединения
-- Сетевые ошибки
-- Bot detection (пауза 5 минут)
+### Temporary (retry)
+- HTTP 403 (access/cookie issues)
+- HTTP 400 (outdated yt-dlp version)
+- Connection timeouts
+- Network errors
+- Bot detection (5-minute pause)
 
-### Rate Limiting (длительные паузы)
-- YouTube rate limit (пауза 1 час)
-- HTTP 429 (пауза 30 минут)
+### Rate Limiting (long pauses)
+- YouTube rate limit (1-hour pause)
+- HTTP 429 (30-minute pause)
 
-### Необратимые (пропуск без повтора)
-- HTTP 404/410 (видео удалено)
-- Приватные видео / Members-only
-- Гео-блокировка
+### Irreversible (skip without retry)
+- HTTP 404/410 (video deleted)
+- Private videos / Members-only
+- Geo-blocking
 - Copyright takedown
-- Требуется оплата
-- Запланированные премьеры
+- Payment required
+- Scheduled premieres
 
-### Критические (остановка скрипта)
-- Диск заполнен
-- Нет прав доступа к папке
-- ffmpeg не найден
+### Critical (script termination)
+- Disk full
+- No folder access rights
+- ffmpeg not found
 
-## Дополнительная информация
+## Additional Information
 
-- **Безопасность аккаунта**: Используйте умеренные задержки между видео, чтобы избежать блокировки аккаунта YouTube
-- **Disk space**: Убедитесь в наличии достаточного свободного места (видео в Full HD занимает ~500 МБ - 2 ГБ)
-- **Возрастные ограничения**: Для видео 18+ требуются cookies из браузера с авторизованным аккаунтом YouTube
-- **Обновления**: Регулярно обновляйте yt-dlp: `pip install -U yt-dlp`
+- **Account security**: Use moderate delays between videos to avoid YouTube account blocking
+- **Disk space**: Ensure sufficient free space (Full HD video takes ~500 MB - 2 GB)
+- **Age restrictions**: For 18+ videos, cookies from a browser with an authorized YouTube account are required
+- **Updates**: Regularly update yt-dlp: `pip install -U yt-dlp`
 
-## Лицензия
+## 📄 License
 
-Скрипт распространяется свободно. Используйте на свое усмотрение.
+The script is distributed freely. Use at your discretion.
 
-## Полезные ссылки
+## 🔗 Useful Links
 
 - [yt-dlp GitHub](https://github.com/yt-dlp/yt-dlp)
 - [yt-dlp Documentation](https://github.com/yt-dlp/yt-dlp#readme)
