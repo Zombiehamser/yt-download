@@ -8,13 +8,13 @@
 ---
 
 Python script for automated mass downloading of YouTube videos via [yt-dlp](https://github.com/yt-dlp/yt-dlp) with intelligent error handling, retry system, and detailed logging.
-/
+
 Python-скрипт для автоматизированной массовой загрузки видео с YouTube через yt-dlp с интеллектуальной обработкой ошибок, системой повторных попыток и детальным логированием.
 
 ## Purpose
 
 The script is designed for reliable downloading of large video collections (hundreds and thousands of files, including playlists) in a "set and forget" mode. Automatically handles typical issues: YouTube rate limits, network errors, unavailable videos, with the ability to resume from where it left off. It's simply a scripted wrapper around yt-dlp, written for personal convenience.
-/
+
 Скрипт предназначен для надежной загрузки больших коллекций видео (сотни и тысячи файлов, включая плейлисты) в режиме «запустил и забыл». Автоматически обрабатывает типичные проблемы: rate limit YouTube, сетевые ошибки, недоступные видео, с возможностью возобновления с места остановки. Является просто скриптовой надстройкой над yt-dlp, написанной для собственного удобства.
 
 ## Key Features
