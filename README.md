@@ -13,9 +13,9 @@
 
 ---
 
-**Automated YouTube video downloader with intelligent error handling, retry system, and detailed logging for mass downloads (hundreds/thousands of files).**
+**Automated script YouTube video downloader (yt-dlp) with intelligent error handling, retry system, and detailed logging for mass downloads (thousands of single files or playlists).**
 
-**Автоматизированный загрузчик видео с YouTube с интеллектуальной обработкой ошибок, системой повторных попыток и детальным логированием для массовых загрузок (сотни/тысячи файлов).**
+**Автоматизированный скрипт загрузчик видео с YouTube (yt-dlp) с интеллектуальной обработкой ошибок, системой повторных попыток и детальным логированием для массовых загрузок (тысячи одиночных файлов или плейлистов).**
 
 ## ✨ Features
 
