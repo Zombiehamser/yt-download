@@ -44,7 +44,6 @@ def setup_logger(log_file, max_bytes=10*1024*1024, backup_count=3):
     # Формат лога с временной меткой
     formatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     file_handler.setFormatter(formatter)
-    
     logger.addHandler(file_handler)
     
     return logger
@@ -79,6 +78,7 @@ def format_time(seconds):
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
     secs = int(seconds % 60)
+    
     if hours > 0:
         return f"{hours}ч {minutes}м {secs}с"
     elif minutes > 0:
@@ -102,10 +102,10 @@ def read_links_file(links_path):
 def classify_error(line_lower, error_keywords):
     """Классифицирует ошибки на категории"""
     error_type = {
-        'skip': False,      # Пропустить без повтора
-        'retry': False,     # Повторить попытку
-        'pause': 0,         # Секунд паузы
-        'fatal': False,     # Критическая ошибка
+        'skip': False,     # Пропустить без повтора
+        'retry': False,    # Повторить попытку
+        'pause': 0,        # Секунд паузы
+        'fatal': False,    # Критическая ошибка
         'message': ''
     }
     
@@ -131,7 +131,7 @@ def classify_error(line_lower, error_keywords):
     if 'http error 403' in line_lower:
         error_type.update({
             'retry': True,
-            'pause': 60,
+            'pause': 600,
             'message': 'HTTP 403: Проблема с cookies/доступом'
         })
     elif 'http error 429' in line_lower:
@@ -265,8 +265,8 @@ def download_youtube_videos(links_file='links.txt'):
         print(f"\n{colored('='*70, Fore.BLUE)}")
         print(colored(f"[{idx}/{len(active_links)}] {url}", Fore.YELLOW))
         print(colored('='*70, Fore.BLUE))
-        
         logger.info(f"\n[{idx}/{len(active_links)}] URL: {url}")
+        
         video_start_time = time.time()
         
         # УЛУЧШЕННАЯ КОМАНДА с дополнительными опциями
@@ -295,7 +295,7 @@ def download_youtube_videos(links_file='links.txt'):
             '--socket-timeout', '30',
             
             # Оптимизация загрузки
-            '--concurrent-fragments', '5',
+            '--concurrent-fragments', '1',
             '--buffer-size', '16K',
             
             # Метаданные и naming
@@ -327,7 +327,6 @@ def download_youtube_videos(links_file='links.txt'):
         
         while attempt < max_attempts and not success and not should_skip:
             attempt += 1
-            
             if attempt > 1:
                 msg = f"ПОВТОРНАЯ ПОПЫТКА {attempt}/{max_attempts}"
                 print(f"\n{colored(f'⚠ {msg}', Fore.YELLOW)}")
@@ -348,21 +347,20 @@ def download_youtube_videos(links_file='links.txt'):
                 error_details = []
                 last_line_was_progress = False
                 
-                # Таймаут на весь процесс - 10 минут на видео
+                # Таймаут на весь процесс - 60 минут на видео
                 start_time = time.time()
-                timeout_seconds = 600
+                timeout_seconds = 3600
                 
                 while True:
                     # Проверяем таймаут
                     if time.time() - start_time > timeout_seconds:
                         process.kill()
-                        msg = "ТАЙМАУТ! Процесс завис более 10 минут"
+                        msg = "ТАЙМАУТ! Процесс завис более 60 минут"
                         print(colored(f"\n⚠ {msg}", Fore.RED))
                         logger.warning(f"  {msg}")
                         break
                     
                     line = process.stdout.readline()
-                    
                     if not line and process.poll() is not None:
                         break
                     
@@ -393,7 +391,7 @@ def download_youtube_videos(links_file='links.txt'):
                         else:
                             if last_line_was_progress:
                                 print()
-                                last_line_was_progress = False
+                            last_line_was_progress = False
                             
                             # Цветной вывод
                             if line.startswith('[download]'):
@@ -423,8 +421,8 @@ def download_youtube_videos(links_file='links.txt'):
                         print(f"\n{colored(msg, Fore.GREEN)}")
                         logger.info(f"  {msg}")
                         success_count += 1
-                    success = True
-                    
+                        success = True
+                        
                 elif return_code == 2:
                     msg = "✗ ОШИБКА В ПАРАМЕТРАХ КОМАНДЫ! (exit code 2)"
                     print(f"\n{colored(msg, Fore.RED)}")
@@ -482,23 +480,23 @@ def download_youtube_videos(links_file='links.txt'):
                         for remaining in range(pause_time, 0, -60):
                             mins = remaining // 60
                             if mins > 0:
-                                print(f"\r  Осталось: {mins} мин...  ", end='', flush=True)
+                                print(f"\r  Осталось: {mins} мин... ", end='', flush=True)
                             time.sleep(min(60, remaining))
                         print()
-                    
-                    if attempt >= max_attempts or should_skip:
-                        if should_skip:
-                            msg = "Пропускаем видео (необратимая ошибка)"
-                            print(colored(f"  {msg}", Fore.YELLOW))
-                            logger.info(f"  {msg}")
-                            skip_count += 1
-                        else:
-                            msg = f"✗ Не удалось после {max_attempts} попыток"
-                            print(colored(f"  {msg}", Fore.RED))
-                            logger.error(f"  {msg}")
-                            fail_count += 1
-                            failed_urls.append(url)
                 
+                if attempt >= max_attempts or should_skip:
+                    if should_skip:
+                        msg = "Пропускаем видео (необратимая ошибка)"
+                        print(colored(f"  {msg}", Fore.YELLOW))
+                        logger.info(f"  {msg}")
+                        skip_count += 1
+                    else:
+                        msg = f"✗ Не удалось после {max_attempts} попыток"
+                        print(colored(f"  {msg}", Fore.RED))
+                        logger.error(f"  {msg}")
+                        fail_count += 1
+                        failed_urls.append(url)
+                        
             except KeyboardInterrupt:
                 msg = "⚠ ПРЕРВАНО ПОЛЬЗОВАТЕЛЕМ"
                 print(f"\n\n{colored(msg, Fore.YELLOW)}")
@@ -513,7 +511,6 @@ def download_youtube_videos(links_file='links.txt'):
                 msg = f"✗ ИСКЛЮЧЕНИЕ: {e}"
                 print(f"\n{colored(msg, Fore.RED)}")
                 logger.exception(f"  {msg}")  # exception() автоматически добавит traceback
-                
                 if attempt >= max_attempts:
                     fail_count += 1
                     failed_urls.append(url)
@@ -567,6 +564,7 @@ def download_youtube_videos(links_file='links.txt'):
         failed_file = os.path.join(script_dir, 'failed_links.txt')
         with open(failed_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(failed_urls))
+        
         msg = f"⚠ Неудавшиеся ({len(failed_urls)} шт.): failed_links.txt"
         print(f"\n{colored(msg, Fore.YELLOW)}")
         logger.info(f"\n{msg}")

@@ -44,7 +44,6 @@ def setup_logger(log_file, max_bytes=10*1024*1024, backup_count=3):
     # Log format with timestamp
     formatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     file_handler.setFormatter(formatter)
-    
     logger.addHandler(file_handler)
     
     return logger
@@ -79,6 +78,7 @@ def format_time(seconds):
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
     secs = int(seconds % 60)
+    
     if hours > 0:
         return f"{hours}h {minutes}m {secs}s"
     elif minutes > 0:
@@ -102,10 +102,10 @@ def read_links_file(links_path):
 def classify_error(line_lower, error_keywords):
     """Classifies errors into categories"""
     error_type = {
-        'skip': False,      # Skip without retry
-        'retry': False,     # Retry attempt
-        'pause': 0,         # Seconds to pause
-        'fatal': False,     # Fatal error
+        'skip': False,     # Skip without retry
+        'retry': False,    # Retry attempt
+        'pause': 0,        # Seconds to pause
+        'fatal': False,    # Fatal error
         'message': ''
     }
     
@@ -131,7 +131,7 @@ def classify_error(line_lower, error_keywords):
     if 'http error 403' in line_lower:
         error_type.update({
             'retry': True,
-            'pause': 60,
+            'pause': 600,
             'message': 'HTTP 403: Problem with cookies/access'
         })
     elif 'http error 429' in line_lower:
@@ -265,8 +265,8 @@ def download_youtube_videos(links_file='links.txt'):
         print(f"\n{colored('='*70, Fore.BLUE)}")
         print(colored(f"[{idx}/{len(active_links)}] {url}", Fore.YELLOW))
         print(colored('='*70, Fore.BLUE))
-        
         logger.info(f"\n[{idx}/{len(active_links)}] URL: {url}")
+        
         video_start_time = time.time()
         
         # ENHANCED COMMAND with additional options
@@ -295,7 +295,7 @@ def download_youtube_videos(links_file='links.txt'):
             '--socket-timeout', '30',
             
             # Download optimization
-            '--concurrent-fragments', '5',
+            '--concurrent-fragments', '1',
             '--buffer-size', '16K',
             
             # Metadata and naming
@@ -327,7 +327,6 @@ def download_youtube_videos(links_file='links.txt'):
         
         while attempt < max_attempts and not success and not should_skip:
             attempt += 1
-            
             if attempt > 1:
                 msg = f"RETRY ATTEMPT {attempt}/{max_attempts}"
                 print(f"\n{colored(f'⚠ {msg}', Fore.YELLOW)}")
@@ -348,21 +347,20 @@ def download_youtube_videos(links_file='links.txt'):
                 error_details = []
                 last_line_was_progress = False
                 
-                # Timeout for entire process - 10 minutes per video
+                # Timeout for entire process - 60 minutes per video
                 start_time = time.time()
-                timeout_seconds = 600
+                timeout_seconds = 3600
                 
                 while True:
                     # Check timeout
                     if time.time() - start_time > timeout_seconds:
                         process.kill()
-                        msg = "TIMEOUT! Process hung for more than 10 minutes"
+                        msg = "TIMEOUT! Process hung for more than 60 minutes"
                         print(colored(f"\n⚠ {msg}", Fore.RED))
                         logger.warning(f"  {msg}")
                         break
                     
                     line = process.stdout.readline()
-                    
                     if not line and process.poll() is not None:
                         break
                     
@@ -393,7 +391,7 @@ def download_youtube_videos(links_file='links.txt'):
                         else:
                             if last_line_was_progress:
                                 print()
-                                last_line_was_progress = False
+                            last_line_was_progress = False
                             
                             # Colored output
                             if line.startswith('[download]'):
@@ -423,8 +421,8 @@ def download_youtube_videos(links_file='links.txt'):
                         print(f"\n{colored(msg, Fore.GREEN)}")
                         logger.info(f"  {msg}")
                         success_count += 1
-                    success = True
-                    
+                        success = True
+                        
                 elif return_code == 2:
                     msg = "✗ COMMAND PARAMETERS ERROR! (exit code 2)"
                     print(f"\n{colored(msg, Fore.RED)}")
@@ -485,20 +483,20 @@ def download_youtube_videos(links_file='links.txt'):
                                 print(f"\r  Remaining: {mins} min... ", end='', flush=True)
                             time.sleep(min(60, remaining))
                         print()
-                    
-                    if attempt >= max_attempts or should_skip:
-                        if should_skip:
-                            msg = "Skipping video (irreversible error)"
-                            print(colored(f"  {msg}", Fore.YELLOW))
-                            logger.info(f"  {msg}")
-                            skip_count += 1
-                        else:
-                            msg = f"✗ Failed after {max_attempts} attempts"
-                            print(colored(f"  {msg}", Fore.RED))
-                            logger.error(f"  {msg}")
-                            fail_count += 1
-                            failed_urls.append(url)
                 
+                if attempt >= max_attempts or should_skip:
+                    if should_skip:
+                        msg = "Skipping video (irreversible error)"
+                        print(colored(f"  {msg}", Fore.YELLOW))
+                        logger.info(f"  {msg}")
+                        skip_count += 1
+                    else:
+                        msg = f"✗ Failed after {max_attempts} attempts"
+                        print(colored(f"  {msg}", Fore.RED))
+                        logger.error(f"  {msg}")
+                        fail_count += 1
+                        failed_urls.append(url)
+                        
             except KeyboardInterrupt:
                 msg = "⚠ INTERRUPTED BY USER"
                 print(f"\n\n{colored(msg, Fore.YELLOW)}")
@@ -513,7 +511,6 @@ def download_youtube_videos(links_file='links.txt'):
                 msg = f"✗ EXCEPTION: {e}"
                 print(f"\n{colored(msg, Fore.RED)}")
                 logger.exception(f"  {msg}")  # exception() will automatically add traceback
-                
                 if attempt >= max_attempts:
                     fail_count += 1
                     failed_urls.append(url)
@@ -567,6 +564,7 @@ def download_youtube_videos(links_file='links.txt'):
         failed_file = os.path.join(script_dir, 'failed_links.txt')
         with open(failed_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(failed_urls))
+        
         msg = f"⚠ Failed ({len(failed_urls)} pcs.): failed_links.txt"
         print(f"\n{colored(msg, Fore.YELLOW)}")
         logger.info(f"\n{msg}")
