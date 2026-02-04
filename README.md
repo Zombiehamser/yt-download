@@ -64,7 +64,7 @@ winget install ffmpeg
 echo https://www.youtube.com/watch?v=dQw4w9WgXcQ > links.txt
 
 # 3. Run the script
-python yt-download3_RU.py
+python yt-download3_EN.py
 
 That's it! The script will handle everything automatically with intelligent error recovery and DNS monitoring.
 
@@ -215,7 +215,7 @@ https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=
 ### 2. Launch
 
 ```powershell
-python yt-download3_RU.py
+python yt-download3_EN.py
 ```
 
 ### 3. Monitoring
