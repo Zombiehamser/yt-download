@@ -551,4 +551,3 @@ The script is distributed freely. Use at your discretion.
 - [Python Downloads](https://www.python.org/downloads/)
 - [ffmpeg Downloads](https://ffmpeg.org/download.html)
 - [Colorama (colored output)](https://pypi.org/project/colorama/)
-```
