@@ -1170,12 +1170,54 @@ def _install_package(package_name):
         except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print(colored(f"    \u274c Failed to install {package_name}: {e}", Fore.RED))
 
+
+def run_cleanup():
+    """Запустить очистку мусора (NFO/превью без видео) через subprocess."""
+    cfg = load_config()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    cleaner_path = os.path.join(script_dir, "yt_media_cleaner_ru.py")
+
+    if not os.path.isfile(cleaner_path):
+        print(colored(f"  \u26a0 Cleaner не найден: yt_media_cleaner_ru.py", Fore.YELLOW))
+        print(colored(f"    Скачайте скрипт из репозитория или поместите рядом с yt_download_ru.py", Fore.YELLOW))
+        return
+
+    media_root = cfg.get("cleanup", {}).get("media_root", "downloads")
+    print()
+    print(colored("=" * 70, Fore.BLUE))
+    print(colored("  ОЧИСТКА МУСОРА (NFO/превью без видео)", Fore.CYAN))
+    print(colored("=" * 70, Fore.BLUE))
+    print(colored(f"  Скрипт: {cleaner_path}", Fore.CYAN))
+    print(colored(f"  Директория: {media_root}", Fore.CYAN))
+    print(colored(f"  Удаление: .nfo, .jpg, .jpeg, .webp, .png без парного .mp4", Fore.CYAN))
+    print()
+    print(colored("  Будет запущен интерактивный cleaner.", Fore.YELLOW))
+    print(colored("  В cleaner выберите режим 2 (очистка orphan) или 3 (оба режима).", Fore.YELLOW))
+    ans = input(colored("  Продолжить? (y/n): ", Fore.YELLOW)).strip().lower()
+    if ans != "y":
+        print(colored("  Очистка отменена.", Fore.YELLOW))
+        return
+
+    print(colored("\n  Запуск cleaner...\n", Fore.CYAN))
+    try:
+        subprocess.run([sys.executable, cleaner_path], timeout=300)
+    except subprocess.TimeoutExpired:
+        print(colored("  \u26a0 Cleaner превысил таймаут (300 с)", Fore.YELLOW))
+    except Exception as e:
+        print(colored(f"  \u274c Ошибка запуска cleaner: {e}", Fore.RED))
+
+    print(colored("\n  Cleaner завершён.", Fore.GREEN))
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="YouTube Downloader")
     parser.add_argument('--check', '-c', action='store_true', help='Check dependencies and exit')
+    parser.add_argument('--cleanup', '-C', action='store_true', help='Run orphan metadata cleaner and exit')
     args = parser.parse_args()
     if args.check:
         setup_check()
+        sys.exit(0)
+    if args.cleanup:
+        run_cleanup()
         sys.exit(0)
     main_with_auto_restart()

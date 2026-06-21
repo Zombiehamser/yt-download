@@ -1170,12 +1170,58 @@ def _install_package(package_name):
         except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print(colored(f"    \u274c Failed to install {package_name}: {e}", Fore.RED))
 
+
+def run_cleanup():
+    """Run orphan metadata cleaner (NFO/images without video) via subprocess."""
+    cfg = load_config()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    cleaner_path = os.path.join(script_dir, "yt_media_cleaner_en.py")
+
+    if not os.path.isfile(cleaner_path):
+        cleaner_path = os.path.join(script_dir, "yt_media_cleaner_ru.py")
+        if os.path.isfile(cleaner_path):
+            print(colored("  Cleaner is currently available only in Russian; launching RU cleaner.", Fore.YELLOW))
+        else:
+            print(colored(f"  \u26a0 Cleaner not found: yt_media_cleaner_en.py or yt_media_cleaner_ru.py", Fore.YELLOW))
+            print(colored(f"    Download the script from the repository or place it next to yt_download_en.py", Fore.YELLOW))
+            return
+
+    media_root = cfg.get("cleanup", {}).get("media_root", "downloads")
+    print()
+    print(colored("=" * 70, Fore.BLUE))
+    print(colored("  ORPHAN METADATA CLEANUP (NFO/images without video)", Fore.CYAN))
+    print(colored("=" * 70, Fore.BLUE))
+    print(colored(f"  Script: {cleaner_path}", Fore.CYAN))
+    print(colored(f"  Directory: {media_root}", Fore.CYAN))
+    print(colored(f"  Targets: .nfo, .jpg, .jpeg, .webp, .png without paired .mp4", Fore.CYAN))
+    print()
+    print(colored("  The interactive cleaner will be launched.", Fore.YELLOW))
+    print(colored("  In the cleaner, select mode 2 (orphan cleanup) or 3 (both).", Fore.YELLOW))
+    ans = input(colored("  Continue? (y/n): ", Fore.YELLOW)).strip().lower()
+    if ans != "y":
+        print(colored("  Cleanup cancelled.", Fore.YELLOW))
+        return
+
+    print(colored("\n  Launching cleaner...\n", Fore.CYAN))
+    try:
+        subprocess.run([sys.executable, cleaner_path], timeout=300)
+    except subprocess.TimeoutExpired:
+        print(colored("  \u26a0 Cleaner timed out (300s)", Fore.YELLOW))
+    except Exception as e:
+        print(colored(f"  \u274c Error running cleaner: {e}", Fore.RED))
+
+    print(colored("\n  Cleaner finished.", Fore.GREEN))
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="YouTube Downloader")
     parser.add_argument('--check', '-c', action='store_true', help='Check dependencies and exit')
+    parser.add_argument('--cleanup', '-C', action='store_true', help='Run orphan metadata cleaner and exit')
     args = parser.parse_args()
     if args.check:
         setup_check()
+        sys.exit(0)
+    if args.cleanup:
+        run_cleanup()
         sys.exit(0)
     main_with_auto_restart()
