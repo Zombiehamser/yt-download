@@ -247,6 +247,76 @@ The script will automatically process all links with error handling. Progress is
 
 If necessary, interrupt the script with **Ctrl+C** — progress will be saved in `download_archive.txt`, and you can continue later from the same place. The script also has auto-restart capability for critical errors.
 
+## 🔐 Authentication & Cookies
+
+Some YouTube content requires authentication:
+- **Private playlists** (Watch Later, Liked Videos, custom playlists)
+- **Age-restricted content** (18+ videos)
+- **Members-only** videos
+- **Subscriber content**
+
+The script supports three methods for authentication via cookies.
+
+### Method 1 — Browser (default)
+
+yt-dlp automatically extracts cookies from your browser.
+
+```toml
+[cookies]
+mode = "browser"
+browser = "firefox"
+```
+
+Supported browsers: `firefox`, `chrome`, `chromium`, `edge`, `opera`, `brave`, `safari`.
+Make sure you are logged into YouTube in the browser before running the script.
+
+### Method 2 — cookies.txt (recommended for unstable environments)
+
+A standalone cookies.txt file is more reliable than automatic browser extraction.
+It works regardless of whether the browser is open or closed.
+
+**Steps:**
+
+1. Install a browser extension to export cookies:
+   - **Chrome/Edge:** [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+   - **Firefox:** [cookies.txt](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/)
+
+2. Log in to YouTube in your browser.
+
+3. Click the extension icon → **Export** → save as `cookies.txt`.
+
+4. Place `cookies.txt` in the script directory (or set a custom path in config).
+
+5. Configure in `config.toml`:
+
+```toml
+[cookies]
+mode = "file"
+cookies_file = "cookies.txt"
+```
+
+### Method 3 — One-time export via yt-dlp
+
+Export cookies from the command line for use with Method 2:
+
+```powershell
+yt-dlp --cookies-from-browser chrome --cookies cookies.txt "https://www.youtube.com/..."
+```
+
+Then follow Method 2 steps 4-5.
+
+### Configuration example
+
+```toml
+[cookies]
+# "browser" — auto-extract from browser (default)
+# "file"    — use cookies.txt file
+# "off"     — no cookies (public videos only)
+mode = "browser"
+browser = "firefox"
+cookies_file = "cookies.txt"
+```
+
 ## 📁 File Structure
 
 After running, the script will create the following files:

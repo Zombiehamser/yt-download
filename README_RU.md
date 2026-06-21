@@ -247,6 +247,77 @@ python yt_download_ru.py
 
 При необходимости прервите скрипт комбинацией **Ctrl+C** — прогресс сохранится в `download_archive.txt`, и можно продолжить позже с того же места. Скрипт также имеет функцию автоматического перезапуска при критических ошибках.
 
+## 🔐 Авторизация и cookies
+
+Для доступа к некоторому контенту YouTube требуется авторизация:
+- **Приватные плейлисты** (Watch Later, понравившиеся, пользовательские плейлисты)
+- **Контент с возрастными ограничениями** (18+)
+- **Members-only** видео
+- **Контент по подписке**
+
+Скрипт поддерживает три метода аутентификации через cookies.
+
+### Способ 1 — Браузер (по умолчанию)
+
+yt-dlp автоматически извлекает cookies из вашего браузера.
+
+```toml
+[cookies]
+mode = "browser"
+browser = "firefox"
+```
+
+Поддерживаемые браузеры: `firefox`, `chrome`, `chromium`, `edge`, `opera`, `brave`, `safari`.
+Убедитесь, что вы вошли в YouTube в браузере перед запуском скрипта.
+
+### Способ 2 — cookies.txt (рекомендуется при нестабильной среде)
+
+Отдельный файл cookies.txt надёжнее автоматического извлечения из браузера.
+Он работает независимо от того, открыт браузер или закрыт.
+**Особенно рекомендуется, если браузерный метод даёт ошибки.**
+
+**Шаги:**
+
+1. Установите расширение для экспорта cookies:
+   - **Chrome/Edge:** [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+   - **Firefox:** [cookies.txt](https://addons.mozilla.org/ru/firefox/addon/cookies-txt/)
+
+2. Войдите в YouTube в браузере.
+
+3. Нажмите на иконку расширения → **Export** → сохраните как `cookies.txt`.
+
+4. Поместите `cookies.txt` в директорию со скриптом (или укажите путь в config).
+
+5. Настройте в `config.toml`:
+
+```toml
+[cookies]
+mode = "file"
+cookies_file = "cookies.txt"
+```
+
+### Способ 3 — Разовый экспорт через yt-dlp
+
+Экспорт cookies из командной строки для использования со Способом 2:
+
+```powershell
+yt-dlp --cookies-from-browser chrome --cookies cookies.txt "https://www.youtube.com/..."
+```
+
+Затем следуйте шагам 4-5 Способа 2.
+
+### Пример конфигурации
+
+```toml
+[cookies]
+# "browser" — авто-извлечение из браузера (по умолчанию)
+# "file"    — использовать файл cookies.txt
+# "off"     — без cookies (только публичные видео)
+mode = "browser"
+browser = "firefox"
+cookies_file = "cookies.txt"
+```
+
 ## 📁 Структура файлов
 
 После запуска скрипт создаст следующие файлы:

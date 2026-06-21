@@ -9,6 +9,104 @@ from datetime import datetime
 import socket
 import json
 import re
+# ── Config loading ─────────────────────────────────────────────
+_CONFIG: dict | None = None
+
+def load_config(config_path: str | None = None) -> dict:
+    """Load config from config.toml. Returns merged dict (config overrides defaults).
+
+    Priority: config.toml values -> hardcoded defaults.
+    Returns defaults when config.toml is missing or invalid TOML.
+    """
+    global _CONFIG
+    if _CONFIG is not None:
+        return _CONFIG
+
+    defaults = {
+        "downloads": {
+            "output_dir": "downloads",
+            "links_file": "links.txt",
+            "archive_file": "download_archive.txt",
+            "failed_links_file": "failed_links.txt",
+            "log_file": "download.log",
+            "max_attempts": 3,
+            "generate_nfo": True,
+            "save_thumbnails": True,
+        },
+        "cookies": {
+            "mode": "browser",
+            "browser": "firefox",
+            "cookies_file": "cookies.txt",
+        },
+        "network": {
+            "dns_check": True,
+            "dns_recovery_wait": True,
+            "dns_recovery_timeout": 600,
+            "dns_check_interval": 60,
+            "max_consecutive_dns_errors": 20,
+            "socket_timeout": 60,
+            "timeout_video": 3600,
+            "timeout_playlist": 86400,
+            "retries": 15,
+            "fragment_retries": 15,
+            "extractor_retries": 8,
+            "file_access_retries": 5,
+            "sleep_requests": 5,
+            "sleep_interval": 20,
+            "max_sleep_interval": 60,
+            "concurrent_fragments": 1,
+            "buffer_size": "16K",
+        },
+        "logging": {
+            "max_bytes": 10 * 1024 * 1024,
+            "backup_count": 5,
+            "log_level": "INFO",
+        },
+        "ui": {
+            "color": True,
+        },
+    }
+
+    if config_path is None:
+        config_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "config.toml"
+        )
+
+    if not os.path.isfile(config_path):
+        _CONFIG = defaults
+        return defaults
+
+    try:
+        import tomllib  # type: ignore[import-untyped]
+        loader = tomllib
+    except ImportError:
+        try:
+            import tomli as loader  # type: ignore[no-redef]
+        except ImportError:
+            _CONFIG = defaults
+            return defaults
+
+    try:
+        with open(config_path, "rb") as f:
+            user_cfg = loader.load(f)
+    except Exception:
+        print(f"[config] Warning: invalid TOML in {config_path}, using defaults", file=sys.stderr)
+        _CONFIG = defaults
+        return defaults
+
+    # Non-destructive merge: user config overrides defaults
+    merged = {}
+    for section, values in defaults.items():
+        if section in user_cfg and isinstance(user_cfg[section], dict):
+            merged[section] = {
+                **values,
+                **{k: v for k, v in user_cfg[section].items() if v is not None},
+            }
+        else:
+            merged[section] = dict(values)
+
+    _CONFIG = merged
+    return merged
 
 # ─── DNS: monkey-patch REMOVED ─────────────────────────────────────────────────
 # Reason for removal:
@@ -31,12 +129,36 @@ except ImportError:
     print("For colored output install: pip install colorama\n")
 
 def colored(text, color_code=''):
+def _build_cookie_args(cfg: dict, script_dir: str, logger=None):
+    """Build yt-dlp cookie CLI args based on config.
+
+    Returns list of strings to extend into the yt-dlp command.
+    """
+    mode = cfg["cookies"]["mode"]
+    browser = cfg["cookies"]["browser"]
+    cookie_file = cfg["cookies"]["cookies_file"]
+
+    if mode == "browser":
+        return ["--cookies-from-browser", browser]
+
+    if mode == "file":
+        cookies_path = os.path.join(script_dir, cookie_file)
+        if os.path.isfile(cookies_path):
+            return ["--cookies", str(cookies_path)]
+        print(colored(f"  \u26a0 Cookies file not found: {cookie_file}", Fore.YELLOW))
+        print(colored(f"    Fallback to browser mode ({browser})", Fore.YELLOW))
+        if logger:
+            logger.warning(f"Cookies file not found: {cookie_file}, fallback to browser mode ({browser})")
+        return ["--cookies-from-browser", browser]
+
+    # mode == "off"
+    return []
     """Returns colored text if colorama is available"""
     if COLORS_AVAILABLE and color_code:
         return f"{color_code}{text}{Style.RESET_ALL}"
     return text
 
-def setup_logger(log_file, max_bytes=10*1024*1024, backup_count=5):
+def setup_logger(log_file, max_bytes=cfg["logging"]["max_bytes"], backup_count=cfg["logging"]["backup_count"]):
     """
     Sets up a logger with file rotation
     max_bytes: maximum file size (default 10 MB)
@@ -87,11 +209,13 @@ def get_playlist_info(url, archive_file, logger=None):
         if logger:
             logger.info(f"  Checking playlist progress...")
 
+        cookie_args_info = _build_cookie_args(cfg, script_dir, logger)
+        _COOKIE_ARGS_INFO = cookie_args_info
         cmd = [
             'yt-dlp',
             '--flat-playlist',
             '--print', 'id',
-            '--cookies-from-browser', 'firefox',
+            *_COOKIE_ARGS,  # cookies: mode={cfg['cookies']['mode']}
             '--no-warnings',
             url
         ]
@@ -435,28 +559,30 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
         )
 
     # yt-dlp COMMAND
+    cookie_args = _build_cookie_args(cfg, script_dir, logger)
+    _COOKIE_ARGS = cookie_args
     cmd = [
         'yt-dlp',
-        '--cookies-from-browser', 'firefox',
+        *_COOKIE_ARGS,  # cookies: mode={cfg['cookies']['mode']}
         '--remote-components', 'ejs:github',
         # Format and conversion
         '-f', 'bestvideo+bestaudio/best',
         '--merge-output-format', 'mp4',
         '--remux-video', 'mp4',
         # Retry attempts
-        '--retries', '15',
-        '--fragment-retries', '15',
-        '--extractor-retries', '8',
-        '--file-access-retries', '5',
+        '--retries', str(cfg["network"]["retries"]),
+        '--fragment-retries', str(cfg["network"]["fragment_retries"]),
+        '--extractor-retries', str(cfg["network"]["extractor_retries"]),
+        '--file-access-retries', str(cfg["network"]["file_access_retries"]),
         # Delays
-        '--sleep-requests', '5',
-        '--sleep-interval', '20',
-        '--max-sleep-interval', '60',
+        '--sleep-requests', str(cfg["network"]["sleep_requests"]),
+        '--sleep-interval', str(cfg["network"]["sleep_interval"]),
+        '--max-sleep-interval', str(cfg["network"]["max_sleep_interval"]),
         # Timeouts
-        '--socket-timeout', '60',
+        '--socket-timeout', str(cfg["network"]["socket_timeout"]),
         # Download optimization
-        '--concurrent-fragments', '1',
-        '--buffer-size', '16K',
+        '--concurrent-fragments', str(cfg["network"]["concurrent_fragments"]),
+        '--buffer-size', cfg["network"]["buffer_size"],
         # Metadata and thumbnails
         '--embed-metadata',
         '--embed-thumbnail',
@@ -481,12 +607,13 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
         url
     ]
 
-    max_attempts = 3
+    cfg = load_config()
+    max_attempts = cfg["downloads"]["max_attempts"]
     attempt = 0
     success = False
     should_skip = False
     consecutive_dns_errors = 0
-    max_consecutive_dns_errors = 20
+    max_consecutive_dns_errors = cfg["network"]["max_consecutive_dns_errors"]
     success_count = 0
     skip_count = 0
     fail_count = 0
@@ -518,7 +645,7 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
             # Playlist timeout: 24h, single video timeout: 1h.
             # WL with 4360 videos at --sleep-interval 20 takes ~87200 sec just on pauses.
             start_time = time.time()
-            timeout_seconds = 86400 if is_playlist else 3600
+            timeout_seconds = cfg["network"]["timeout_playlist"] if is_playlist else cfg["network"]["timeout_video"]
 
             while True:
                 if time.time() - start_time > timeout_seconds:
@@ -659,7 +786,7 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
                 logger.warning(msg)
                 if not check_dns_resolution('www.youtube.com'):
                     logger.warning("DNS unavailable, waiting for recovery...")
-                    if wait_for_dns_recovery('www.youtube.com', check_interval=60, max_wait=600):
+                    if wait_for_dns_recovery('www.youtube.com', check_interval=cfg["network"]["dns_check_interval"], max_wait=cfg["network"]["dns_recovery_timeout"]):
                         consecutive_dns_errors = 0
                         pause_time = 30
                     else:
@@ -706,22 +833,23 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
     failed_url = url if fail_count > 0 else None
     return (success_count, skip_count, fail_count, failed_url, consecutive_dns_errors, False)
 
-def download_youtube_videos(links_file='links.txt'):
+def download_youtube_videos(links_file=None):
     """Downloads YouTube videos with enhanced error handling and playlist progress tracking"""
     if not check_ytdlp_installed():
+    cfg = load_config()
         return False
 
     script_dir = os.path.dirname(os.path.abspath(__file__)) or os.getcwd()
-    downloads_dir = os.path.join(script_dir, 'downloads')
-    links_path = os.path.join(script_dir, links_file)
-    log_file = os.path.join(script_dir, 'download.log')
-    archive_file = os.path.join(script_dir, 'download_archive.txt')
+    downloads_dir = os.path.join(script_dir, cfg["downloads"]["output_dir"])
+    links_path = os.path.join(script_dir, links_file or cfg["downloads"]["links_file"])
+    log_file = os.path.join(script_dir, cfg["downloads"]["log_file"])
+    archive_file = os.path.join(script_dir, cfg["downloads"]["archive_file"])
 
     if not os.path.exists(downloads_dir):
         os.makedirs(downloads_dir)
         print(colored(f"✓ Created folder: {downloads_dir}", Fore.GREEN))
 
-    logger = setup_logger(log_file, max_bytes=10*1024*1024, backup_count=5)
+    logger = setup_logger(log_file, max_bytes=cfg["logging"]["max_bytes"], backup_count=cfg["logging"]["backup_count"])
 
     if not os.path.exists(links_path):
         print(colored(f"✗ File {links_file} not found!", Fore.RED))
@@ -843,7 +971,7 @@ def download_youtube_videos(links_file='links.txt'):
     logger.info(f"{'='*70}\n")
 
     if failed_urls:
-        failed_file = os.path.join(script_dir, 'failed_links.txt')
+        failed_file = os.path.join(script_dir, cfg["downloads"]["failed_links_file"])
         with open(failed_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(failed_urls))
         msg = f"⚠ Failed ({len(failed_urls)} items): failed_links.txt"
