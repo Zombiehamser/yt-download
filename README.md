@@ -1,6 +1,6 @@
 # yt-download
 
-**Version:** 5.1 | **Last Updated:** 04 February 2026
+**Version:** 5.4 | **Last Updated:** 21 June 2026
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README_RU.md)
@@ -10,6 +10,10 @@
 [![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red.svg)](https://github.com/yt-dlp/yt-dlp)
 
 *[Read in Russian](README_RU.md)*
+
+**Language / Language:**
+- English script: `yt-download5.4_EN.py` (default)
+- Russian script: `yt-download5.4_RU.py`
 
 ---
 
@@ -65,7 +69,7 @@ winget install ffmpeg
 echo https://www.youtube.com/watch?v=dQw4w9WgXcQ > links.txt
 
 # 3. Run the script
-python yt-download5.1_EN.py
+python yt-download5.4_EN.py    # or yt-download5.4_RU.py for Russian
 ```
 
 That's it! The script will handle everything automatically with intelligent error recovery and DNS monitoring.
@@ -223,7 +227,7 @@ https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=
 ### 2. Launch
 
 ```powershell
-python yt-download5.1_EN.py
+python yt-download5.4_EN.py    # or yt-download5.4_RU.py for Russian
 ```
 
 ### 3. Monitoring
@@ -564,6 +568,33 @@ A: Run `pip install -U yt-dlp` regularly. YouTube frequently changes its API, so
 - **DNS issues**: The script is resilient to temporary DNS failures but may need manual intervention for prolonged outages
 - **Logs**: Check `download.log` for detailed error information if downloads fail
 - **Thumbnails**: Separate JPG thumbnails are saved alongside videos for media server use
+
+## 📁 Local Files (not in git)
+
+The following files are created at runtime and are excluded from the repository via `.gitignore`:
+
+| File | Description |
+|------|-------------|
+| `links.txt` | Your YouTube URLs, one per line (create this file manually) |
+| `downloads/` | All downloaded videos, organized by playlist |
+| `download.log` | Rotating log (10 MB max, 5 backups) |
+| `download_archive.txt` | Tracks downloaded video IDs for resume support |
+| `failed_links.txt` | List of URLs that failed to download |
+
+### First run after cloning
+
+```powershell
+# 1. Install dependencies
+pip install -U yt-dlp colorama
+
+# 2. Create your links file
+echo https://www.youtube.com/watch?v=EXAMPLE > links.txt
+
+# 3. Run the script
+python yt-download5.4_EN.py
+```
+
+**Note:** The script requires Firefox cookies (`--cookies-from-browser firefox`) for age-restricted and private content. Make sure you are logged into YouTube in Firefox before running.
 
 ## 📄 License
 

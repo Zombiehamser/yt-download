@@ -1,6 +1,6 @@
 # yt-download
 
-**Версия:** 5.1 | **Последнее обновление:** 04 февраля 2026
+**Версия:** 5.4 | **Последнее обновление:** 21 июня 2026
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README_RU.md)
@@ -10,6 +10,10 @@
 [![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red.svg)](https://github.com/yt-dlp/yt-dlp)
 
 *[Читать на английском](README.md)*
+
+**Language / Language:**
+- Russian script: `yt-download5.4_RU.py` (default)
+- English script: `yt-download5.4_EN.py`
 
 ---
 
@@ -65,7 +69,7 @@ winget install ffmpeg
 echo https://www.youtube.com/watch?v=dQw4w9WgXcQ > links.txt
 
 # 3. Запустите скрипт
-python yt-download5.1_RU.py
+python yt-download5.4_RU.py
 ```
 
 Скрипт автоматически обработает всё с интеллектуальным восстановлением после ошибок и мониторингом DNS.
@@ -223,7 +227,7 @@ https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=
 ### 2. Запуск
 
 ```powershell
-python yt-download5.1_RU.py
+python yt-download5.4_RU.py
 ```
 
 ### 3. Мониторинг
@@ -564,6 +568,33 @@ ffmpeg -version
 - **Проблемы с DNS**: Скрипт устойчив к временным сбоям DNS, но при длительных перебоях может потребоваться ручное вмешательство
 - **Логи**: Проверьте `download.log` для получения подробной информации об ошибках, если загрузки не удаются
 - **Миниатюры**: Отдельные JPG миниатюры сохраняются рядом с видео для использования медиасервером
+
+## 📁 Локальные файлы (не в Git)
+
+Следующие файлы создаются во время работы и исключены из репозитория через `.gitignore`:
+
+| Файл | Описание |
+|------|----------|
+| `links.txt` | Ваши YouTube ссылки, по одной на строку (создайте этот файл вручную) |
+| `downloads/` | Все скачанные видео, сгруппированные по плейлистам |
+| `download.log` | Ротируемый лог (макс. 10 МБ, 5 backup) |
+| `download_archive.txt` | Отслеживает ID скачанных видео для возобновления |
+| `failed_links.txt` | Список URL, которые не удалось скачать |
+
+### Первый запуск после клонирования
+
+```powershell
+# 1. Установка зависимостей
+pip install -U yt-dlp colorama
+
+# 2. Создайте файл со ссылками
+echo https://www.youtube.com/watch?v=EXAMPLE > links.txt
+
+# 3. Запустите скрипт
+python yt-download5.4_RU.py
+```
+
+**Примечание:** Скрипт использует cookies Firefox (`--cookies-from-browser firefox`) для контента с возрастными ограничениями и приватных плейлистов. Убедитесь, что вы вошли в YouTube в Firefox перед запуском.
 
 ## 📄 Лицензия
 

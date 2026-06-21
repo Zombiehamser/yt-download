@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+
+# Virtual env
+venv/
+.venv/
+
+# yt-download specific
+downloads/
+*.log
+*.info.json
+*.nfo
+*.jpg
+*.part
+*.ytdl
+*.temp
+*.json
+!config.example.json
+*.mp4
+*.mkv
+*.webm
+*.jpeg
+*.webp
+/links.txt
+/failed_links.txt
+/download_archive.txt
+cookies*
+
+# Temp / build
+dist/
+build/
+*.egg-info/
