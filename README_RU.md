@@ -8,12 +8,16 @@
 [![License](https://img.shields.io/badge/license-Free-green.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey.svg)]()
 [![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red.svg)](https://github.com/yt-dlp/yt-dlp)
+> **Примечание:** Этот скрипт является удобной надстройкой над [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+> Он не заменяет yt-dlp, а предоставляет преднастроенные параметры для пакетной загрузки
+> с retry-логикой, логированием и поддержкой медиасерверов (Plex, Kodi, Jellyfin).
+> yt-dlp должен быть установлен отдельно.
 
 *[Читать на английском](README.md)*
 
 **Language / Language:**
-- Russian script: `yt-download5.4_RU.py` (default)
-- English script: `yt-download5.4_EN.py`
+- Russian script: `yt_download_ru.py` (default)
+- English script: `yt_download_en.py`
 
 ---
 
@@ -62,17 +66,16 @@
 
 ```powershell
 # 1. Установка зависимостей
-pip install -U yt-dlp colorama
+uv pip install yt-dlp colorama
+#    Или через pip: pip install yt-dlp colorama
 winget install ffmpeg
 
 # 2. Создайте links.txt со ссылками на YouTube
 echo https://www.youtube.com/watch?v=dQw4w9WgXcQ > links.txt
 
 # 3. Запустите скрипт
-python yt-download5.4_RU.py
+python yt_download_ru.py
 ```
-
-Скрипт автоматически обработает всё с интеллектуальным восстановлением после ошибок и мониторингом DNS.
 
 ## Основные возможности
 
@@ -227,7 +230,7 @@ https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=
 ### 2. Запуск
 
 ```powershell
-python yt-download5.4_RU.py
+python yt_download_ru.py
 ```
 
 ### 3. Мониторинг
@@ -585,13 +588,14 @@ ffmpeg -version
 
 ```powershell
 # 1. Установка зависимостей
-pip install -U yt-dlp colorama
+uv pip install yt-dlp colorama
+#    Или через pip: pip install yt-dlp colorama
 
 # 2. Создайте файл со ссылками
 echo https://www.youtube.com/watch?v=EXAMPLE > links.txt
 
 # 3. Запустите скрипт
-python yt-download5.4_RU.py
+python yt_download_ru.py
 ```
 
 **Примечание:** Скрипт использует cookies Firefox (`--cookies-from-browser firefox`) для контента с возрастными ограничениями и приватных плейлистов. Убедитесь, что вы вошли в YouTube в Firefox перед запуском.

@@ -8,12 +8,16 @@
 [![License](https://img.shields.io/badge/license-Free-green.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey.svg)]()
 [![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red.svg)](https://github.com/yt-dlp/yt-dlp)
+> **Note:** This script is a convenience wrapper around [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+> It does not replace yt-dlp — it provides pre-configured settings for batch downloading
+> with retry logic, logging, and media server support (Plex, Kodi, Jellyfin).
+> yt-dlp must be installed separately.
 
 *[Read in Russian](README_RU.md)*
 
 **Language / Language:**
-- English script: `yt-download5.4_EN.py` (default)
-- Russian script: `yt-download5.4_RU.py`
+- English script: `yt_download_en.py` (default)
+- Russian script: `yt_download_ru.py`
 
 ---
 
@@ -62,17 +66,16 @@ The script is designed for reliable downloading of large video collections (hund
 
 ```powershell
 # 1. Install dependencies
-pip install -U yt-dlp colorama
+uv pip install yt-dlp colorama
+#    Or with pip: pip install yt-dlp colorama
 winget install ffmpeg
 
 # 2. Create links.txt with YouTube URLs
 echo https://www.youtube.com/watch?v=dQw4w9WgXcQ > links.txt
 
 # 3. Run the script
-python yt-download5.4_EN.py    # or yt-download5.4_RU.py for Russian
+python yt_download_en.py
 ```
-
-That's it! The script will handle everything automatically with intelligent error recovery and DNS monitoring.
 
 ## Key Features
 
@@ -227,7 +230,7 @@ https://www.youtube.com/watch?v=h4Bq69HfR0Y&list=RDh4Bq69HfR0Y&start_radio=1&pp=
 ### 2. Launch
 
 ```powershell
-python yt-download5.4_EN.py    # or yt-download5.4_RU.py for Russian
+python yt_download_en.py       # or yt_download_ru.py for Russian
 ```
 
 ### 3. Monitoring
@@ -585,13 +588,14 @@ The following files are created at runtime and are excluded from the repository 
 
 ```powershell
 # 1. Install dependencies
-pip install -U yt-dlp colorama
+uv pip install yt-dlp colorama
+#    Or with pip: pip install yt-dlp colorama
 
 # 2. Create your links file
 echo https://www.youtube.com/watch?v=EXAMPLE > links.txt
 
 # 3. Run the script
-python yt-download5.4_EN.py
+python yt_download_en.py       # or yt_download_ru.py for Russian
 ```
 
 **Note:** The script requires Firefox cookies (`--cookies-from-browser firefox`) for age-restricted and private content. Make sure you are logged into YouTube in Firefox before running.
