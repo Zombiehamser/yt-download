@@ -1065,5 +1065,117 @@ def main_with_auto_restart():
             print(colored(f"Restarting in 60 seconds... (#{consecutive_failures})", Fore.YELLOW))
             time.sleep(60)
 
+def setup_check():
+    """Check all dependencies and offer to install missing ones."""
+    cfg = load_config()
+    print(colored("=" * 70, Fore.BLUE))
+    print(colored("  DEPENDENCY CHECK", Fore.CYAN))
+    print(colored("=" * 70, Fore.BLUE))
+    print()
+
+    all_ok = True
+
+    # 1. Python version
+    print(colored("  [1/5] Python version...", Fore.CYAN), end=" ", flush=True)
+    if sys.version_info >= (3, 8):
+        print(colored(f"\u2705 {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}", Fore.GREEN))
+    else:
+        print(colored(f"\u274c {sys.version_info.major}.{sys.version_info.minor} (need 3.8+)", Fore.RED))
+        all_ok = False
+
+    # 2. yt-dlp
+    print(colored("  [2/5] yt-dlp...", Fore.CYAN), end=" ", flush=True)
+    ytdlp_ok = False
+    try:
+        result = subprocess.run(['yt-dlp', '--version'], capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            print(colored(f"\u2705 {result.stdout.strip()}", Fore.GREEN))
+            ytdlp_ok = True
+        else:
+            print(colored(f"\u274c not found", Fore.RED))
+    except FileNotFoundError:
+        print(colored(f"\u274c not found", Fore.RED))
+    if not ytdlp_ok:
+        all_ok = False
+        ans = input("    \u2795 Install yt-dlp? (y/n): ").strip().lower()
+        if ans == 'y':
+            _install_package('yt-dlp')
+
+    # 3. ffmpeg
+    print(colored("  [3/5] ffmpeg...", Fore.CYAN), end=" ", flush=True)
+    ffmpeg_ok = False
+    try:
+        result = subprocess.run(['ffmpeg', '-version'], capture_output=True, timeout=5)
+        if result.returncode == 0:
+            print(colored(f"\u2705 ffmpeg found", Fore.GREEN))
+            ffmpeg_ok = True
+        else:
+            print(colored(f"\u274c not found", Fore.RED))
+    except FileNotFoundError:
+        print(colored(f"\u274c not found", Fore.RED))
+    if not ffmpeg_ok:
+        all_ok = False
+        print(colored("    \u2139 Install ffmpeg: winget install ffmpeg", Fore.YELLOW))
+
+    # 4. colorama
+    print(colored("  [4/5] colorama...", Fore.CYAN), end=" ", flush=True)
+    try:
+        import importlib.util
+        spec = importlib.util.find_spec("colorama")
+        if spec is not None:
+            print(colored(f"\u2705 installed", Fore.GREEN))
+        else:
+            print(colored(f"\u274c not installed", Fore.RED))
+            all_ok = False
+            ans = input("    \u2795 Install colorama? (y/n): ").strip().lower()
+            if ans == 'y':
+                _install_package('colorama')
+    except ImportError:
+        print(colored(f"\u274c not installed", Fore.RED))
+        all_ok = False
+
+    # 5. Cookies (if mode=file)
+    print(colored("  [5/5] Cookies file...", Fore.CYAN), end=" ", flush=True)
+    cookie_mode = cfg["cookies"]["mode"]
+    if cookie_mode == "file":
+        cookie_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), cfg["cookies"]["cookies_file"]
+        )
+        if os.path.isfile(cookie_path):
+            print(colored(f"\u2705 {cfg['cookies']['cookies_file']} exists", Fore.GREEN))
+        else:
+            print(colored(f"\u274c {cfg['cookies']['cookies_file']} not found (mode=file)", Fore.RED))
+            print(colored(f"    \u2139 Export cookies from browser or set mode=browser in config", Fore.YELLOW))
+            all_ok = False
+    else:
+        print(colored("\u2705 not required (mode={})".format(cookie_mode), Fore.GREEN))
+
+    print()
+    if all_ok:
+        print(colored("\u2705 All dependencies satisfied!", Fore.GREEN))
+    else:
+        print(colored("\u26a0 Some dependencies are missing (see above)", Fore.YELLOW))
+    print(colored("=" * 70, Fore.BLUE))
+
+
+def _install_package(package_name):
+    """Try to install a package via uv, fallback to pip."""
+    try:
+        subprocess.run(['uv', 'pip', 'install', package_name], check=True, timeout=60)
+        print(colored(f"    \u2705 {package_name} installed via uv", Fore.GREEN))
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        try:
+            subprocess.run([sys.executable, '-m', 'pip', 'install', package_name], check=True, timeout=60)
+            print(colored(f"    \u2705 {package_name} installed via pip", Fore.GREEN))
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            print(colored(f"    \u274c Failed to install {package_name}: {e}", Fore.RED))
+
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description="YouTube Downloader")
+    parser.add_argument('--check', '-c', action='store_true', help='Check dependencies and exit')
+    args = parser.parse_args()
+    if args.check:
+        setup_check()
+        sys.exit(0)
     main_with_auto_restart()
