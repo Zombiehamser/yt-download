@@ -31,7 +31,7 @@ def _import_from_path(module_name, filename):
 
 
 try:
-    ru = _import_from_path("yt_download5_4_RU", "yt-download5.4_RU.py")
+    ru = _import_from_path("yt_download_ru", "yt_download_ru.py")
     RU_AVAILABLE = True
 except Exception as e:
     ru = None
@@ -39,7 +39,7 @@ except Exception as e:
     print(f"[WARN] RU import failed: {e}")
 
 try:
-    en = _import_from_path("yt_download5_4_EN", "yt-download5.4_EN.py")
+    en = _import_from_path("yt_download_en", "yt_download_en.py")
     EN_AVAILABLE = True
 except Exception as e:
     en = None

@@ -1,0 +1,21 @@
+# Auto-detect text files and use LF
+* text=auto eol=lf
+
+# Python
+*.py text diff=python
+
+# Markdown
+*.md text
+
+# Config
+*.toml text
+*.json text
+
+# Binary
+*.mp4 binary
+*.mkv binary
+*.webm binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.png binary

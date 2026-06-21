@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "yt-download"
+version = "5.4.0"
+description = "Automated YouTube video downloader with intelligent error handling, DNS recovery, and playlist progress tracking"
+authors = [
+    {name = "Zombiehamser"},
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+
+dependencies = [
+    "colorama",
+]
+
+[project.urls]
+Homepage = "https://github.com/Zombiehamser/yt-download"
+Repository = "https://github.com/Zombiehamser/yt-download"
