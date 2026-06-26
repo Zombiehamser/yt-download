@@ -8,6 +8,8 @@ from datetime import datetime
 import socket
 import json
 import re
+import glob
+from xml.sax.saxutils import escape as xml_escape
 # ── Config loading ─────────────────────────────────────────────
 _CONFIG: dict | None = None
 
@@ -127,7 +129,6 @@ except ImportError:
     COLORS_AVAILABLE = False
     print("Для цветного вывода: pip install colorama\n")
 
-def colored(text, color_code=''):
 def _build_cookie_args(cfg: dict, script_dir: str, logger=None):
     """Build yt-dlp cookie CLI args based on config.
 
@@ -152,12 +153,15 @@ def _build_cookie_args(cfg: dict, script_dir: str, logger=None):
 
     # mode == "off"
     return []
+
+
+def colored(text, color_code=None):
     """Возвращает цветной текст если colorama доступна"""
     if COLORS_AVAILABLE and color_code:
         return f"{color_code}{text}{Style.RESET_ALL}"
     return text
 
-def setup_logger(log_file, max_bytes=cfg["logging"]["max_bytes"], backup_count=cfg["logging"]["backup_count"]):
+def setup_logger(log_file, max_bytes=None, backup_count=None):
     """
     Настраивает логгер с ротацией файлов
     max_bytes: максимальный размер файла (по умолчанию 10 МБ)
@@ -176,7 +180,18 @@ def setup_logger(log_file, max_bytes=cfg["logging"]["max_bytes"], backup_count=c
         encoding='utf-8'
     )
 
+    cfg = load_config()
+    if max_bytes is None:
+        max_bytes = cfg["logging"]["max_bytes"]
+    if backup_count is None:
+        backup_count = cfg["logging"]["backup_count"]
+
     formatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    cfg = load_config()
+    if max_bytes is None:
+        max_bytes = cfg["logging"]["max_bytes"]
+    if backup_count is None:
+        backup_count = cfg["logging"]["backup_count"]
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
     return logger
@@ -193,7 +208,7 @@ def is_playlist_url(url):
     ]
     return any(re.search(pattern, url) for pattern in playlist_patterns)
 
-def get_playlist_info(url, archive_file, logger=None):
+def get_playlist_info(url, archive_file, cfg, script_dir, logger=None):
     """
     Получает информацию о плейлисте: общее количество видео и сколько уже скачано.
     Возвращает: (total_videos, downloaded_videos, remaining_videos)
@@ -208,13 +223,12 @@ def get_playlist_info(url, archive_file, logger=None):
         if logger:
             logger.info(f"   Проверка прогресса плейлиста...")
 
-        cookie_args_info = _build_cookie_args(cfg, script_dir, logger)
-        _COOKIE_ARGS_INFO = cookie_args_info
+        cookie_args = _build_cookie_args(cfg, script_dir, logger)
         cmd = [
             'yt-dlp',
             '--flat-playlist',
             '--print', 'id',
-            *_COOKIE_ARGS,  # cookies: mode={cfg['cookies']['mode']}
+            *cookie_args,
             '--no-warnings',
             url
         ]
@@ -273,24 +287,24 @@ def generate_nfo_file(info_json_path, logger=None):
 
         nfo_path = info_json_path.replace('.info.json', '.nfo')
 
-        title = info.get('title', 'Unknown')
-        video_id = info.get('id', '')
-        uploader = info.get('uploader', info.get('channel', 'Unknown'))
-        description = info.get('description', '')
+        title = xml_escape(info.get('title', 'Unknown'))
+        video_id = xml_escape(info.get('id', ''))
+        uploader = xml_escape(info.get('uploader', info.get('channel', 'Unknown')))
+        description = xml_escape(info.get('description', ''))
         upload_date = info.get('upload_date', '')
 
         year = upload_date[:4] if len(upload_date) >= 4 else ''
-        month_day = upload_date[4:] if len(upload_date) >= 8 else ''
         formatted_date = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:8]} 00:00:00Z" if len(upload_date) == 8 else ''
 
-        nfo_content = f"""<movie>
+        nfo_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<movie>
     <title>{title}</title>
     <studio>{uploader}</studio>
     <uniqueid type="youtube">{video_id}</uniqueid>
     <plot>{description}</plot>
     <premiered>{formatted_date}</premiered>
     <year>{year}</year>
-    <sorttitle>{month_day}</sorttitle>
+    <sorttitle>{title}</sorttitle>
     <source>YouTube</source>
 </movie>"""
 
@@ -388,7 +402,7 @@ def read_links_file(links_path):
             links.append(stripped)
     return links
 
-def classify_error(line_lower, error_keywords):
+def classify_error(line_lower):
     """Классифицирует ошибки по категориям"""
     error_type = {
         'skip': False,
@@ -533,6 +547,7 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
     Скачивает видео по одному URL (может быть одно видео или плейлист)
     Возвращает (success_count, skip_count, fail_count, failed_url_or_none, consecutive_dns_errors, fatal)
     """
+    cfg = load_config()
     print(f"\n{colored('='*70, Fore.BLUE)}")
     print(colored(f"[{idx}/{total}] {url}", Fore.YELLOW))
     print(colored('='*70, Fore.BLUE))
@@ -606,7 +621,6 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
         url
     ]
 
-    cfg = load_config()
     max_attempts = cfg["downloads"]["max_attempts"]
     attempt = 0
     success = False
@@ -732,6 +746,13 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
                 consecutive_dns_errors = 0
                 success = True
 
+                # Генерация NFO файлов для скачанных видео
+                if cfg["downloads"].get("generate_nfo", True):
+                    for info_json in glob.glob(os.path.join(downloads_dir, "**", "*.info.json"), recursive=True):
+                        nfo_path = info_json.replace(".info.json", ".nfo")
+                        if not os.path.exists(nfo_path):
+                            generate_nfo_file(info_json, logger)
+
             elif return_code == 2:
                 msg = "✗ ОШИБКА ПАРАМЕТРОВ КОМАНДЫ! (exit code 2)"
                 print(f"\n{colored(msg, Fore.RED)}")
@@ -758,7 +779,7 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
             has_dns_error = False
 
             for error in error_keywords:
-                error_class = classify_error(error.lower(), error_keywords)
+                error_class = classify_error(error.lower())
                 if error_class['message']:
                     print(colored(f"   ⚠ {error_class['message']}", Fore.YELLOW))
                     logger.warning(f"   {error_class['message']}")
@@ -835,8 +856,9 @@ def download_single_url(url, idx, total, script_dir, downloads_dir, archive_file
 def download_youtube_videos(links_file=None):
     """Скачивает YouTube видео с улучшенной обработкой ошибок и проверкой прогресса плейлистов"""
     if not check_ytdlp_installed():
-    cfg = load_config()
         return False
+
+    cfg = load_config()
 
     script_dir = os.path.dirname(os.path.abspath(__file__)) or os.getcwd()
     downloads_dir = os.path.join(script_dir, cfg["downloads"]["output_dir"])
@@ -886,7 +908,7 @@ def download_youtube_videos(links_file=None):
         is_playlist = is_playlist_url(url)
 
         if is_playlist:
-            total_vids, downloaded_vids, remaining_vids = get_playlist_info(url, archive_file, logger)
+            total_vids, downloaded_vids, remaining_vids = get_playlist_info(url, archive_file, cfg, script_dir, logger)
 
             # При (0,0,0) — не удалось получить статистику (таймаут/ошибка сети),
             # не считаем плейлист пустым, продолжаем загрузку — yt-dlp сам разберётся по архиву.
@@ -920,7 +942,7 @@ def download_youtube_videos(links_file=None):
 
         # После загрузки плейлиста — повторная проверка прогресса
         if is_playlist:
-            total_vids, downloaded_vids, remaining_vids = get_playlist_info(url, archive_file, logger)
+            total_vids, downloaded_vids, remaining_vids = get_playlist_info(url, archive_file, cfg, script_dir, logger)
             if total_vids == 0:
                 logger.warning(f"   Финальная статистика плейлиста недоступна")
             elif remaining_vids > 0:
@@ -985,7 +1007,7 @@ def download_youtube_videos(links_file=None):
     incomplete_playlists = []
     for url in active_links:
         if is_playlist_url(url):
-            total_vids, _, remaining = get_playlist_info(url, archive_file, None)
+            total_vids, _, remaining = get_playlist_info(url, archive_file, cfg, script_dir, None)
             if total_vids > 0 and remaining > 0:
                 incomplete_playlists.append((url, remaining))
 

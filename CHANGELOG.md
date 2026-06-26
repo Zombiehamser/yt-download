@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.4.1] - 2026-06-26
+
+### Fixed
+
+- `download_single_url()`: moved `cfg = load_config()` to top of function (was used before assignment).
+- `get_playlist_info()`: added `cfg` and `script_dir` parameters; fixed `_COOKIE_ARGS` → `cookie_args` (was NameError).
+- `generate_nfo_file()`: added XML escaping via `xml.sax.saxutils.escape` for title, uploader, description, video_id.
+- `generate_nfo_file()`: added `<?xml version="1.0"?>` XML declaration header.
+- `generate_nfo_file()`: changed `sorttitle` from `month_day` to `title` (standard for Kodi/Jellyfin).
+- `classify_error()`: removed unused `error_keywords` parameter.
+
+### Added
+
+- `generate_nfo_file()` is now called after successful download, gated by `cfg["downloads"]["generate_nfo"]`.
+- NFO files are only generated when a matching `.nfo` does not already exist (idempotent).
+
 ## [5.4.0] - 2026-06-21
 
 ### Added

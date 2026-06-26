@@ -454,8 +454,10 @@ Full list: [yt-dlp Output Template](https://github.com/yt-dlp/yt-dlp#output-temp
 After each successful download, the script:
 1. Locates the `.info.json` file created by yt-dlp
 2. Extracts metadata: title, video ID, uploader, description, upload date
-3. Creates a `.nfo` file with structured information for Plex/Kodi
-4. Saves it alongside the video file with the same base name
+3. Applies XML escaping to all text fields (safe for `&`, `<`, `>` in titles)
+4. Creates a `.nfo` file with structured XML for Plex/Kodi/Jellyfin
+5. Saves it alongside the video file with the same base name
+6. Skips if `.nfo` already exists (idempotent)
 
 ## 📁 NFO File Generation
 
@@ -467,16 +469,22 @@ The script automatically generates `.nfo` files compatible with Plex, Kodi, and 
 - **YouTube Video ID**
 - **Video Description**
 - **Upload Date** (formatted as YYYY-MM-DD HH:MM:SSZ)
-- **Year** and **Month/Day** (separated for media server parsing)
+- **Year** (for media server sorting)
 - **Source identifier** ("YouTube")
+- **XML declaration header** (`<?xml version="1.0" encoding="UTF-8"?>`)
+- **XML-escaped text fields** (safe for special characters like `&`, `<`, `>`)
 
 ### File Location:
 - Created in the same directory as the downloaded video
 - Same base filename as the video (e.g., `Video Title [ABC123].nfo`)
 - Automatically generated from the `.info.json` file created by yt-dlp
 
+### Configuration:
+- NFO generation is controlled by `generate_nfo = true` in `config.toml` `[downloads]` section
+- Set `generate_nfo = false` to disable NFO file creation
+
 ### Benefits:
-- **Plex/Kodi Compatibility**: Media servers automatically read and display metadata
+- **Plex/Kodi/Jellyfin Compatibility**: Media servers automatically read and display metadata
 - **Organized Library**: Proper sorting by date, channel, and title
 - **Searchable Content**: Descriptions and metadata become searchable in your media library
 - **Automatic Thumbnails**: Media servers can use the embedded or separate thumbnail
